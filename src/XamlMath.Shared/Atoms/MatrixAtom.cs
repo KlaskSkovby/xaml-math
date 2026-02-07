@@ -61,13 +61,14 @@ internal sealed record MatrixAtom : Atom
                 var cell = row[j];
                 var columnWidth = columnWidths[j];
                 var vFreeSpace = rowHeight - cell.TotalHeight;
-                // Bottom align within row: add all vertical space at the top, padding only at bottom
+                // Bottom align within row: add all vertical space at the top, no padding at bottom
                 var topGap = vFreeSpace;
-                var bottomGap = VerticalPadding;
+                var bottomGap = 0.0; // Removed VerticalPadding
                 var cellContainer = new VerticalBox();
                 cellContainer.Add(new StrutBox(0.0, topGap, 0.0, 0.0));
                 cellContainer.Add(cell);
-                cellContainer.Add(new StrutBox(0.0, bottomGap, 0.0, 0.0));
+                if (bottomGap > 0)
+                    cellContainer.Add(new StrutBox(0.0, bottomGap, 0.0, 0.0));
                 // Set depth to align all cells to the same baseline (bottom of row)
                 cellContainer.Height = topGap + cell.Height;
                 cellContainer.Depth = cell.Depth + bottomGap;
