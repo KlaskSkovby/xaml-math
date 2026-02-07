@@ -63,7 +63,7 @@ internal sealed record MatrixAtom : Atom
                 var vFreeSpace = rowHeight - cell.TotalHeight;
                 // Bottom align within row: add all vertical space at the top, no padding at bottom
                 var topGap = vFreeSpace;
-                var bottomGap = 0.0; // Removed VerticalPadding
+                var bottomGap = 0.0;
                 var cellContainer = new VerticalBox();
                 cellContainer.Add(new StrutBox(0.0, topGap, 0.0, 0.0));
                 cellContainer.Add(cell);
@@ -73,9 +73,9 @@ internal sealed record MatrixAtom : Atom
                 cellContainer.Height = topGap + cell.Height;
                 cellContainer.Depth = cell.Depth + bottomGap;
                 var hFreeSpace = columnWidth - cell.TotalWidth;
-                // Center align: distribute horizontal space evenly on both sides
-                var lGap = HorizontalPadding / 2 + hFreeSpace / 2;
-                var rGap = HorizontalPadding / 2 + hFreeSpace / 2;
+                // Left align: put padding on left, all free space on right
+                var lGap = HorizontalPadding / 2;
+                var rGap = HorizontalPadding / 2 + hFreeSpace;
                 rowContainer.Add(new StrutBox(lGap, 0.0, 0.0, 0.0));
                 rowContainer.Add(cellContainer);
                 rowContainer.Add(new StrutBox(rGap, 0.0, 0.0, 0.0));
