@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using XamlMath.Boxes;
 using SurroundingGap = System.Tuple<double, double>;
+using System.Diagnostics;
 
 namespace XamlMath.Atoms;
 
@@ -44,50 +45,46 @@ internal sealed record MatrixAtom : Atom
     protected override Box CreateBoxCore(TexEnvironment environment)
     {
         Box CreateCell(Atom? atom) => atom is null ? StrutBox.Empty : atom.CreateBox(environment);
-
         var cells = MatrixCells.Select(row => row.Select(CreateCell).ToArray()).ToArray();
         var columnCount = MatrixCells.Max(row => row.Count);
         var columnWidths = Enumerable.Range(0, columnCount)
-                                     .Select(i => cells.Where(row => i < row.Length)
-                                     .Max(row => row[i].TotalWidth))
-                                     .ToArray();
-
+            .Select(i => cells.Where(row => i < row.Length)
+                .Max(row => row[i].TotalWidth))
+            .ToArray();
         var rowsContainer = new VerticalBox();
         foreach (var row in cells)
         {
             var rowContainer = new HorizontalBox();
             var rowHeight = row.Length > 0 ? row.Max(cell => cell.TotalHeight) : 0.0;
-
             for (var j = 0; j < columnCount; ++j)
             {
                 var cell = row[j];
                 var columnWidth = columnWidths[j];
-
                 var vFreeSpace = rowHeight - cell.TotalHeight;
-                var tbGap = (VerticalPadding + vFreeSpace) / 2;
+                // Bottom align within row: add all vertical space at the top, padding only at bottom
+                var topGap = vFreeSpace;
+                var bottomGap = VerticalPadding;
                 var cellContainer = new VerticalBox();
-                cellContainer.Add(new StrutBox(0.0, tbGap, 0.0, 0.0));
+                cellContainer.Add(new StrutBox(0.0, topGap, 0.0, 0.0));
                 cellContainer.Add(cell);
-                cellContainer.Add(new StrutBox(0.0, tbGap, 0.0, 0.0));
-                cellContainer.Height = cellContainer.TotalHeight;
-                cellContainer.Depth = 0;
-
-
+                cellContainer.Add(new StrutBox(0.0, bottomGap, 0.0, 0.0));
+                // Set depth to align all cells to the same baseline (bottom of row)
+                cellContainer.Height = topGap + cell.Height;
+                cellContainer.Depth = cell.Depth + bottomGap;
                 var hFreeSpace = columnWidth - cell.TotalWidth;
-                var (lGap, rGap) = GetLeftRightGap(hFreeSpace, j);
+                // Center align: distribute horizontal space evenly on both sides
+                var lGap = HorizontalPadding / 2 + hFreeSpace / 2;
+                var rGap = HorizontalPadding / 2 + hFreeSpace / 2;
                 rowContainer.Add(new StrutBox(lGap, 0.0, 0.0, 0.0));
                 rowContainer.Add(cellContainer);
                 rowContainer.Add(new StrutBox(rGap, 0.0, 0.0, 0.0));
             }
-
             rowsContainer.Add(rowContainer);
         }
-
         var axis = environment.MathFont.GetAxisHeight(environment.Style);
         var containerHeight = rowsContainer.TotalHeight;
         rowsContainer.Depth = containerHeight / 2 - axis;
         rowsContainer.Height = containerHeight / 2 + axis;
-
         return rowsContainer;
     }
 
